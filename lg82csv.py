@@ -341,7 +341,6 @@ footer_def = {
   }
 
 logfile = args[1][:args[1].rfind('.')]
-print(logfile)
 
 with open('%s_output.csv' % logfile, 'w') as f_raw:
     title = ','.join(['callsign', 'my', 'ur', 'mode', 'freq', 'time', 'op', 'fDup', 'Remarks']) + '\n'
@@ -351,14 +350,14 @@ with open('%s_output.csv' % logfile, 'w') as f_raw:
 
     with open(args[1], 'br') as f:
         data = f.read()
-        print(len(data))
+        #print(len(data))
 
         #ヘッダーブロックの処理
         #Get Total QSO count
         QSOs = struct.unpack_from(header_def['totalQSO']['type'], data, header_def['totalQSO']['offset'])
         #Set total size of qso blocks 
         qso_size = qso_block_size * QSOs[0]
-        print(qso_size)
+        #print(qso_size)
         cQSO = 0
 
         #QSOブロック全体のループ
