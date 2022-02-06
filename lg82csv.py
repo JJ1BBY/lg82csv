@@ -350,14 +350,12 @@ with open('%s_output.csv' % logfile, 'w') as f_raw:
 
     with open(args[1], 'br') as f:
         data = f.read()
-        #print(len(data))
 
         #ヘッダーブロックの処理
         #Get Total QSO count
         QSOs = struct.unpack_from(header_def['totalQSO']['type'], data, header_def['totalQSO']['offset'])
         #Set total size of qso blocks 
         qso_size = qso_block_size * QSOs[0]
-        #print(qso_size)
         cQSO = 0
 
         #QSOブロック全体のループ
@@ -370,12 +368,9 @@ with open('%s_output.csv' % logfile, 'w') as f_raw:
             for k, v in block_def.items():
                 t_offset = block_offset + v['offset']
                 h[k] = struct.unpack_from(v['type'], data, t_offset)
-                #文字列のフィールドはパディング\x00を検索して切り詰め ペタルに戻さないといけないか?
-                if v['type'][-1:] == 's': #https://qiita.com/tanuk1647/items/276d2be36f5abb8ea52e
-                    #My = My[0][0:My[0].find (b'\x00')].strip(b'\x00').decode()
-                    #print("before;", h[k])
+                #文字列のフィールドはパディング\x00を検索して切り詰め
+                if v['type'][-1:] == 's': #文字列の場合か判定
                     h[k] = h[k][0][0:h[k][0].find (b'\x00')].strip(b'\x00').decode('sjis')
-                #print(k)
                 if k == 'mode':
                     index = h[k][0]
                     h[k] = table_Mode [str(index)] 
@@ -388,8 +383,6 @@ with open('%s_output.csv' % logfile, 'w') as f_raw:
                     epoch = datetime.datetime(year=1970, month=1, day=1, hour = 9) #JST = 9
                     resultDate = td + epoch
                     h[k] = resultDate
-                #print(h[k])
-                #print(block_offset, v['offset'], t_offset) 
             block_offset += qso_block_size
             # 1行のデータにまとめる
             csv_line = ','.join([h['callsign'], h['my'], h['ur'], h['mode'], h['freq'], str(h['time']), h['op'], str(h['fDup'][0]), h['Remarks']]) + '\n'
@@ -398,17 +391,15 @@ with open('%s_output.csv' % logfile, 'w') as f_raw:
 
 print('Read up to block_offset %d' % block_offset)
 print('Total QSO # is', cQSO)
-#print(block_offset)
 #フッターブロックの処理
 #コンテストとMDファイルの置換テーブルを今後作成する。ロカコンとその他? 
-block_offset -= 2 #最後QSOレコード間のパディングが入ってないので引く
+block_offset -= 2 #最後QSOレコード間のパディング\x01\x80がが入ってないので引く
 f = {}
 for k, v in footer_def.items():
     t_offset = block_offset + v['offset']
     f[k] = struct.unpack_from(v['type'], data, t_offset)
-    #文字列のフィールドはパディング\x00を検索して切り詰め ペタルに戻さないといけないか?
-    if v['type'][-1:] == 's': #https://qiita.com/tanuk1647/items/276d2be36f5abb8ea52e
-        #insert loop
+    #文字列のフィールドはパディング\x00を検索して切り詰め
+    if v['type'][-1:] == 's': #文字列か判定
         f[k] = f[k][0][0:f[k][0].find (b'\x00')].strip(b'\x00').decode('sjis')
     if k == 'cuurentMode':
         index = f[k][0]
@@ -420,13 +411,13 @@ for k, v in footer_def.items():
         index = f[k][0]
         f[k] = table_Contest [str(index)] 
         contestName = f['contest']
-    if k == 'pointFreqPhone':
+    if k == 'pointFreqPhone': #周波数別電話得点取得未実装
         #insert loop
         f[k] = f[k]
-    if k == 'pointFreqCW':
+    if k == 'pointFreqCW':#周波数別CW得点取得未実装
         #insert loop
         f[k] = f[k]
-    if k == 'opNames':
+    if k == 'opNames':#社団局Op名一覧展開取得未実装
         #insert loop
         f[k] = f[k]
 
